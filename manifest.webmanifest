@@ -1,0 +1,17 @@
+{
+  "name": "HaxBall Mobile",
+  "short_name": "HaxBall",
+  "description": "HaxBall para celulares: joystick virtual, CPU y salas con amigos.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#26302a",
+  "theme_color": "#26302a",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

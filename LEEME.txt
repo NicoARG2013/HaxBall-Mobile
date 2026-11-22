@@ -1,0 +1,11 @@
+HAXBALL MOBILE - version "plana" (sin carpetas, para subir archivo por archivo desde el celu)
+
+Archivos: index.html, manifest.webmanifest, sw.js y 4 imagenes .png. Todos tienen que quedar en la misma carpeta, sin subcarpetas.
+
+Opcion A (GitHub Pages, gratis, todo desde el celu):
+ 1. Crea una cuenta en github.com y un repositorio publico nuevo (ej: haxball-mobile).
+ 2. "Add file" > "Upload files": elegi los 7 archivos y confirma ("Commit changes").
+ 3. Settings > Pages > Source: "Deploy from a branch" > rama main, carpeta / (root) > Save.
+ 4. En un minuto tenes el link: https://TU-USUARIO.github.io/haxball-mobile/
+
+Opcion B (Netlify): en netlify.com > Add new site > Import from Git, elegi ese repositorio.
