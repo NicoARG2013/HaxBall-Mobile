@@ -305,7 +305,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
           <div id="pubList" class="publist"></div>
         </div>
       </div>
-      <p id="msg"></p><p class="sub" style="font-size:11px;margin:2px 0 0;opacity:.6">Versión 8 · fe29</p>
+      <p id="msg"></p><p class="sub" style="font-size:11px;margin:2px 0 0;opacity:.6">Versión 10 · c1fd</p>
     </div>
   </div>
 
@@ -440,7 +440,9 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun.relay.metered.ca:80' },
-      { urls: ['turn:global.relay.metered.ca:80', 'turn:global.relay.metered.ca:80?transport=tcp', 'turn:global.relay.metered.ca:443', 'turns:global.relay.metered.ca:443?transport=tcp'], username: '2d05611326da83c6d586b9d4', credential: 'Q135npJLODRoMIJp' }
+      { urls: ['turn:global.relay.metered.ca:80', 'turn:global.relay.metered.ca:80?transport=tcp', 'turn:global.relay.metered.ca:443', 'turns:global.relay.metered.ca:443?transport=tcp'], username: '2d05611326da83c6d586b9d4', credential: 'Q135npJLODRoMIJp' },
+      { urls: ['turn:free.expressturn.com:3478', 'turn:free.expressturn.com:3478?transport=tcp'], username: '000000002110888719', credential: 'wPoe7TWMDSzgZ0ZszAi41sPhZjE' },
+      { urls: ['turn:free.expressturn.com:3478', 'turn:free.expressturn.com:3478?transport=tcp'], username: '000000002110888719', credential: 'wPoe7TWMDSzgZOZszAi41sPhZjE' }
     ], iceCandidatePoolSize: 2
   };
   const rnd = n => { const a = crypto.getRandomValues(new Uint8Array(n)); let s = ''; for (const b of a) s += 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]; return s; };
@@ -1302,7 +1304,9 @@ function applyHost(pr) {
   if (score.b + score.r > prev) beep(659, .2, 'triangle', .07);
   setPauseUI(); updateClock(); updateHud();
 }
+let bLoc = 0, pArm = 0, pLatch = false;
 function setEnt(e, x, y, vx, vy, k) {
+  if (e === ball && bLoc > 0) return;
   e.tx = x; e.ty = y; e.vx = vx; e.vy = vy; e.in = k ? { ix: 0, iy: 0, mag: 0, kick: true } : ZIN;
   if (Math.hypot(e.x - x, e.y - y) > 40) { e.x = x; e.y = y; }
 }
@@ -1323,10 +1327,32 @@ function predictStep() {
   for (const q of posts) collide(p, q, .5);
   if (ko) koClamp(p);
   clampPlayer(p); p.tx = p.x; p.ty = p.y;
+  predictBall(p, i);
+}
+/* La pelota que toca tu jugador se simula también en tu celular, así no la atravesás mientras llega la respuesta del anfitrión. */
+function predictBall(p, i) {
+  if (state !== 'play') { bLoc = 0; return; }
+  const near = Math.hypot(ball.x - p.x, ball.y - p.y) < p.r + ball.r + 8;
+  if (near) bLoc = Math.min(45, Math.round((myPing || 80) / 16.7) + 10);
+  else if (bLoc > 0) bLoc--;
+  if (bLoc <= 0) return;
+  ball.x += ball.vx; ball.y += ball.vy; ball.vx *= ball.damp; ball.vy *= ball.damp;
+  collide(p, ball, DRIB);
+  if (i.kick && !pLatch) pArm = 8; pLatch = !!i.kick;
+  if (pArm > 0) {
+    pArm--;
+    const dx = ball.x - p.x, dy = ball.y - p.y, d = Math.hypot(dx, dy) || 1;
+    if (d - p.r - ball.r < 4.5) { ball.vx += dx / d * 5; ball.vy += dy / d * 5; pArm = 0; beep(280, .07); vib(10); }
+  }
+  for (const q of posts) collide(ball, q, .6);
+  for (const sg of segs) hitSeg(ball, sg, .55);
+  const sp = Math.hypot(ball.vx, ball.vy); if (sp > MAXV) { ball.vx *= MAXV / sp; ball.vy *= MAXV / sp; }
+  ball.tx = ball.x; ball.ty = ball.y;
 }
 function smooth() {
+  if (state !== 'play') bLoc = 0;
   const mine = predicting() ? myDisc() : null;
-  for (const e of [ball, ...P]) { if (e === mine) continue; e.tx += e.vx; e.ty += e.vy; e.x += (e.tx - e.x) * .35; e.y += (e.ty - e.y) * .35; }
+  for (const e of [ball, ...P]) { if (e === mine || (e === ball && bLoc > 0)) continue; e.tx += e.vx; e.ty += e.vy; e.x += (e.tx - e.x) * .35; e.y += (e.ty - e.y) * .35; }
 }
 /* Si se va el anfitrión, el jugador con la etiqueta más baja de los que estaban en equipos toma la sala. */
 function electMe() {
