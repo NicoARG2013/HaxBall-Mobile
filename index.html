@@ -1,16 +1,18 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#26302a">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="HaxBall Mobile">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-180.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>HaxBall Mobile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Rubik+Mono+One&display=swap" rel="stylesheet">
 <style>
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+body { -webkit-touch-callout: none; }
 /* Layout: cancha a pantalla completa en un canvas. HUD arriba, joystick abajo a la izquierda,
    botón de patear abajo a la derecha. En vertical la cancha gira 90° para aprovechar el alto. */
 :root {
@@ -71,7 +73,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .mini { flex: none; width: 28px; height: 24px; padding: 0; border-radius: 8px; border: 2px solid rgba(238, 243, 230, .3); background: transparent; color: var(--ink); font-weight: 800; font-size: 13px; cursor: pointer; line-height: 1; }
 .mini.x { color: var(--red); border-color: rgba(234, 90, 77, .5); }
 .tools { display: flex; gap: 8px; } .tools .btn { margin-top: 8px; padding: 8px; font-size: 13px; }
-.srch { width: 100%; margin: 4px 0; padding: 8px 10px; border-radius: 10px; color: var(--ink); background: rgba(238, 243, 230, .08); border: 2px solid rgba(238, 243, 230, .25); font-size: 13px; user-select: text; -webkit-user-select: text; }
+.srch { width: 100%; margin: 4px 0; padding: 8px 10px; border-radius: 10px; color: var(--ink); background: rgba(238, 243, 230, .08); border: 2px solid rgba(238, 243, 230, .25); font-size: 16px; user-select: text; -webkit-user-select: text; }
 .lk { display: inline-block; width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; color: var(--accent); }
 .pub small { color: var(--ink-dim); font-weight: 500; }
 .hostp { text-align: left; } .hostp .lbl { text-align: left; }
@@ -174,17 +176,25 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
   .btn { margin-top: 8px; padding: 9px 18px; } .roomcode { font-size: 26px; margin: 2px 0; }
 }
 #lobby { padding-bottom: 50px; }
-.lobbyp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 0 22px; align-items: start; }
+.panel.lobbyp { width: min(100%, 940px); display: grid; grid-template-columns: minmax(170px, 230px) minmax(0, 1fr); gap: 0 18px; align-items: start; }
+.teams3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: left; }
+.teams3 .tcol { padding: 8px; } .teams3 .tcol ul { min-height: 110px; max-height: 40vh; overflow-y: auto; }
+.teams3 .tcol li { font-size: 13px; gap: 5px; }
+.tcol.s h3 { color: var(--ink-dim); } .tcol.dropok { outline: 2px dashed var(--accent); outline-offset: -2px; background: rgba(245, 197, 66, .12); }
+.tcol li.host .nm { color: var(--accent); }
+.tcol li.drag { touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; border-radius: 8px; }
+.tcol li.lift { opacity: .3; }
+.dragghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -130%); padding: 6px 12px; border-radius: 10px; background: var(--accent); color: var(--outline); font-weight: 800; font-size: 13px; max-width: 60vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
 .lcol, .rcol { min-width: 0; }
 .rcol .teams { margin-top: 0; }
-@media (max-width: 560px) { .lobbyp { grid-template-columns: 1fr; } .rcol .teams { margin-top: 12px; } }
+@media (max-width: 560px) { .panel.lobbyp { grid-template-columns: 1fr; } .rcol .teams3 { margin-top: 12px; } }
 .namechip { margin: 8px auto 0; display: inline-flex; gap: 10px; align-items: center; padding: 6px 7px 6px 14px; border-radius: 999px; border: 2px solid rgba(238, 243, 230, .25); background: transparent; color: var(--ink); font-weight: 700; font-size: 13px; cursor: pointer; }
 .namechip b { background: var(--accent); color: var(--outline); padding: 4px 10px; border-radius: 999px; font-size: 12px; }
 .chat.game { width: min(46vw, 340px); }
 .chat.game .chatbar { padding: 6px; font-size: 12px; border-radius: 10px 10px 0 0; }
 .chat.game .chatbody { height: auto; padding: 8px; gap: 6px; }
 .chat.game .chatlog { flex: none; height: 46px; overflow: hidden; font-size: 13px; line-height: 1.25; }
-.chat.game .chatbody input, .chat.game .chatbody .btn { padding: 6px 9px; font-size: 13px; }
+.chat.game .chatbody input { padding: 6px 9px; font-size: 16px; } .chat.game .chatbody .btn { padding: 6px 9px; font-size: 13px; }
 @media (max-height: 460px) {
   .desc { display: none; }
   #lobby { padding-bottom: 40px; }
@@ -205,7 +215,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
 .chatlog div { padding: 2px 0; overflow-wrap: anywhere; }
 .chatlog b { color: var(--accent); }
 .chatlog .me b { color: var(--blue); }
-.chatbody input { flex: 1; min-width: 0; padding: 9px 10px; border-radius: 10px; color: var(--ink); background: rgba(238, 243, 230, .08); border: 2px solid rgba(238, 243, 230, .25); font-size: 14px; user-select: text; -webkit-user-select: text; }
+.chatbody input { flex: 1; min-width: 0; padding: 9px 10px; border-radius: 10px; color: var(--ink); background: rgba(238, 243, 230, .08); border: 2px solid rgba(238, 243, 230, .25); font-size: 16px; user-select: text; -webkit-user-select: text; }
 .chatbody .btn { margin: 0; padding: 9px 14px; width: auto; flex: none; font-size: 14px; }
 .field { display: block; width: 100%; margin-top: 10px; padding: 11px; border-radius: 12px; text-align: center; font-weight: 800; font-size: 16px; color: var(--ink); background: rgba(238, 243, 230, .08); border: 2px solid rgba(238, 243, 230, .25); user-select: text; -webkit-user-select: text; }
 .step { display: flex; align-items: center; gap: 10px; }
@@ -291,7 +301,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
         </div>
         <div class="col">
           <h3>Salas</h3>
-          <input id="pubSearch" class="srch" type="search" maxlength="14" autocomplete="off" placeholder="Buscar sala" aria-label="Buscar sala">
+          <input id="pubSearch" class="srch" type="search" maxlength="20" autocomplete="off" placeholder="Buscar sala" aria-label="Buscar sala">
           <div id="pubList" class="publist"></div>
         </div>
       </div>
@@ -300,7 +310,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
   </div>
 
   <div id="lobby" class="overlay" hidden>
-    <div class="panel wide lobbyp">
+    <div class="panel wider lobbyp">
       <div class="lcol">
         <div class="lbl" style="margin-top:0">Código de sala</div>
         <div class="roomcode" id="roomCode">----</div>
@@ -317,11 +327,13 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
         <p class="sub" id="lobbyMsg">Los lugares vacíos los ocupa la CPU.</p>
       </div>
       <div class="rcol">
-        <div class="teams">
-          <div class="tcol b"><h3>Azul</h3><ul id="tB"></ul><button class="btn ghost" id="goB" type="button">Pasarme a Azul</button></div>
-          <div class="tcol r"><h3>Rojo</h3><ul id="tR"></ul><button class="btn ghost" id="goR" type="button">Pasarme a Rojo</button></div>
+        <div class="teams3">
+          <div class="tcol r" data-col="r"><h3>Rojo</h3><ul id="tR"></ul><button class="btn ghost" id="goR" type="button">Pasarme a Rojo</button></div>
+          <div class="tcol s" data-col="s"><h3>Jugadores</h3><ul id="tS"></ul><button class="btn ghost" id="goS" type="button">Quedarme afuera</button></div>
+          <div class="tcol b" data-col="b"><h3>Azul</h3><ul id="tB"></ul><button class="btn ghost" id="goB" type="button">Pasarme a Azul</button></div>
         </div>
         <div class="wait" id="waitList"></div>
+        <p class="sub" id="dragHint" hidden>Arrastrá a cada jugador con el dedo al equipo que quieras.</p>
       </div>
     </div>
   </div>
@@ -393,7 +405,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
     <div class="panel">
       <h2>Tu perfil</h2>
       <p class="sub">Tu nombre y tu ficha los ven tus amigos. Se guardan en este dispositivo.</p>
-      <form id="nameForm"><input id="nameIn" maxlength="14" autocomplete="off" placeholder="Tu nombre" aria-label="Tu nombre" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;text-align:center;font-weight:800;font-size:18px;color:var(--ink);background:rgba(238,243,230,.08);border:2px solid rgba(238,243,230,.25);user-select:text;-webkit-user-select:text"><div class="lbl" style="margin-top:12px">Ficha (1–2 letras o números)</div>
+      <form id="nameForm"><input id="nameIn" maxlength="20" autocomplete="off" placeholder="Tu nombre" aria-label="Tu nombre" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;text-align:center;font-weight:800;font-size:18px;color:var(--ink);background:rgba(238,243,230,.08);border:2px solid rgba(238,243,230,.25);user-select:text;-webkit-user-select:text"><div class="lbl" style="margin-top:12px">Ficha (1–2 letras o números)</div>
         <input id="avIn" maxlength="2" autocomplete="off" placeholder="10" aria-label="Ficha" style="width:84px;padding:8px;border-radius:12px;text-align:center;font-weight:800;font-size:18px;color:var(--ink);background:rgba(238,243,230,.08);border:2px solid rgba(238,243,230,.25);user-select:text;-webkit-user-select:text">
         <div class="lbl">Color del texto</div><div class="sw" id="swT"></div>
         <div class="lbl">Color del borde</div><div class="sw" id="swR"></div>
@@ -424,7 +436,9 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
 (() => {
   'use strict';
   const SB = { url: 'https://dpuiipjvfvjggfeumtle.supabase.co', key: 'sb_publishable_EgZG7NDlmORPSbbiMWQ2ig_oOM1QXYB' };
-  const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] };
+  const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' },
+    { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+    { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }], iceCandidatePoolSize: 4 };
   const rnd = n => { const a = crypto.getRandomValues(new Uint8Array(n)); let s = ''; for (const b of a) s += 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]; return s; };
   const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
   /* Parche tipo "merge": null borra, objetos se mezclan, el resto reemplaza. */
@@ -440,7 +454,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
       this.code = code; this.entryId = 'chapitas-' + code.toLowerCase(); this.mk = PeerCtor || mkPeer;
       this.subs = new Set(); this.errs = new Set(); this.pr = {}; this.others = new Map(); this.pending = new Set();
       this.peer = null; this.entry = null; this.claiming = false; this.closed = false; this.label = ''; this.q = false;
-      this.meObj = null; this.tick = null; this.lastClaim = 0;
+      this.meObj = null; this.tick = null; this.lastClaim = 0; this.unavail = false;
     }
     async start(asHost) {
       this.label = 'u' + rnd(8);
@@ -451,13 +465,29 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
         p.on('disconnected', () => { if (!this.closed) { try { p.reconnect(); } catch (e) {} } });
         p.on('error', e => {
           if (!done) { done = true; rej({ code: (e && e.type) || 'net' }); return; }
+          if (e && e.type === 'peer-unavailable' && String((e && e.message) || '').includes(this.entryId)) { this.unavail = true; return; }
           if (e && ['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type) && !this.closed) this.fail();
         });
         setTimeout(() => { if (!done) { done = true; rej({ code: 'timeout' }); } }, 10000);
       });
       if (asHost) { try { await this.claimEntry(true); } catch (e) { this.leave(); throw e; } }
-      else this.dial(this.entryId, true);
       this.tick = setInterval(() => this.heartbeat(), 1000);
+      if (!asHost) {
+        this.dial(this.entryId, true);
+        const t0 = Date.now(); let n = 1;
+        try {
+          await new Promise((res, rej) => {
+            const iv = setInterval(() => {
+              const dt = Date.now() - t0;
+              if (this.closed) { clearInterval(iv); rej({ code: 'closed' }); }
+              else if (this.others.size > 0) { clearInterval(iv); res(); }
+              else if (this.unavail && dt > 7000) { clearInterval(iv); rej({ code: 'not_found' }); }
+              else if (dt > 18000) { clearInterval(iv); rej({ code: 'timeout' }); }
+              else if (dt > n * 5000) { n++; this.unavail = false; this.pending.delete(this.entryId); this.dial(this.entryId, true); }
+            }, 250);
+          });
+        } catch (e) { this.leave(); throw e; }
+      }
     }
     claimEntry(first) {
       if (this.entry || this.claiming || this.closed) return Promise.resolve();
@@ -510,7 +540,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
     heartbeat() {
       const now = Date.now();
       for (const [id, e] of [...this.others]) {
-        if (now - e.last > 7000) { this.remove(id); continue; }
+        if (now - e.last > 15000) { this.remove(id); continue; }
         if (e.conn.open) { try { e.conn.send({ t: 'h' }); } catch (x) {} }
       }
       if (this.pr.h === 1 && !this.entry && !this.claiming && now - this.lastClaim > 3000) { this.lastClaim = now; this.claimEntry(false); }
@@ -555,7 +585,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
         const sig = JSON.stringify(j); if (sig === lobby.sig) return; lobby.sig = sig;
         lobby.rows = j.filter(x => /^[A-Z0-9]{4}$/.test(x.code)).map(x => Object.freeze({
           peer: 'r-' + x.code, isMe: false, sameTab: false, kind: 'viewer',
-          presence: { rm: { c: x.code, n: String(x.host_name).slice(0, 14), f: x.format, k: x.players, p: x.is_private ? 1 : 0 } }
+          presence: { rm: { c: x.code, n: String(x.host_name).slice(0, 20), f: x.format, k: x.players, p: x.is_private ? 1 : 0 } }
         }));
         for (const f of [...lobby.subs]) { try { f({}); } catch (e) {} }
       } catch (e) {}
@@ -648,7 +678,7 @@ const DRIB = .25;
 try {
   const l = parseInt(localStorage.getItem('chapitas-level'), 10); if (l >= 0 && l <= 2) level = l;
   const n = parseInt(localStorage.getItem('chapitas-n'), 10); if (n >= 1 && n <= 3) nCpu = n;
-  myName = (localStorage.getItem('chapitas-name') || '').slice(0, 14);
+  myName = (localStorage.getItem('chapitas-name') || '').slice(0, 20);
 } catch (e) {}
 
 function build(nb, nr) {
@@ -1056,7 +1086,7 @@ function localInput() {
 
 /* ---------- Online: el anfitrión simula, los demás mandan su joystick ---------- */
 let room = null, L = null, roomCode = '', ok = new Set(), no = {}, att = {}, pwHash = '', locked = false, attemptN = 0, isPriv = false,
-  cfg = { mins: 3, goals: 5, priv: false, pw: '' }, order = [], ro = { b: [], r: [] };
+  cfg = { mins: 3, goals: 5, priv: false, pw: '' }, order = [], ro = { b: [], r: [], s: [] };
 let hostSeenAt = 0, joinDeadline = 0, lastPres = null, lastSent = '', lastSentAt = 0, seq = 0, lastRo = '', pickedOnce = false;
 /* anfitrión: equipos asignados, bloqueo, expulsados, ecos de ping; clientes: ping, última foto del anfitrión (para migrar) */
 let asg = {}, tnSeen = {}, teamN = Math.floor(Math.random() * 1e6), teamLock = false, banned = [], echo = {};
@@ -1080,10 +1110,10 @@ function remoteInput(p) {
 }
 const isAuth = l => !isPriv || ok.has(l) || l === myLabel();
 function computeRoster() {
-  const peers = peerList(), out = { b: [], r: [] }, want = new Set();
+  const peers = peerList(), out = { b: [], r: [], s: [] }, want = new Set();
   for (const q of peers) {
     const pr = q.presence, l = q.peer;
-    if (q.kind !== 'viewer' || (pr.tm !== 'b' && pr.tm !== 'r') || !isAuth(l) || banned.includes(l)) continue;
+    if (q.kind !== 'viewer' || (pr.tm !== 'b' && pr.tm !== 'r' && pr.tm !== 's') || !isAuth(l) || banned.includes(l)) continue;
     if (!(l in asg)) { asg[l] = pr.tm; tnSeen[l] = pr.tn; }
     else if (pr.tn !== tnSeen[l]) { tnSeen[l] = pr.tn; if (!teamLock || q.isMe) asg[l] = pr.tm; }
     want.add(l);
@@ -1117,10 +1147,10 @@ function startOnline() {
   updateMyTeam(); beginMatch();
 }
 /* Controles del anfitrión */
-function moveP(l) { if (mode !== 'host' || state !== 'lobby') return; asg[l] = asg[l] === 'b' ? 'r' : 'b'; hostLobbyPublish(true); }
+function moveP(l, t) { if (mode !== 'host' || state !== 'lobby' || !(l in asg)) return; asg[l] = t === 'b' || t === 'r' || t === 's' ? t : (asg[l] === 'b' ? 'r' : 'b'); hostLobbyPublish(true); }
 function shuffleTeams() {
   if (mode !== 'host' || state !== 'lobby') return;
-  const ls = [...ro.b, ...ro.r];
+  let ls = [...ro.b, ...ro.r]; if (!ls.length) ls = [...(ro.s || [])];
   for (let i = ls.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ls[i], ls[j]] = [ls[j], ls[i]]; }
   const f = Math.random() < .5 ? 'b' : 'r';
   ls.forEach((l, i) => { asg[l] = i % 2 === 0 ? f : (f === 'b' ? 'r' : 'b'); });
@@ -1174,12 +1204,12 @@ function checkPw() {
 function advertise(open) {
   if (!L) return;
   if (open === false || mode !== 'host' || state !== 'lobby') { L.presence({ rm: null }).catch(() => {}); return; }
-  L.presence({ rm: { c: roomCode, n: myName, f: N, k: ro.b.length + ro.r.length, p: isPriv ? 1 : 0 } }).catch(() => {});
+  L.presence({ rm: { c: roomCode, n: myName, f: N, k: ro.b.length + ro.r.length + (ro.s || []).length, p: isPriv ? 1 : 0 } }).catch(() => {});
 }
 function sendPw(pw) { attemptN++; const n = attemptN; lastPw = pw; hashPw(roomCode, pw).then(h => pres({ pwh: h, pwn: n })); }
 let unPeers = null, lobbyDirty = true;
 function resetNet() {
-  ok = new Set(); no = {}; att = {}; lastRo = ''; order = []; ro = { b: [], r: [] }; lastPres = null; hostSeenAt = 0; pickedOnce = false; lobbyDirty = true;
+  ok = new Set(); no = {}; att = {}; lastRo = ''; order = []; ro = { b: [], r: [], s: [] }; lastPres = null; hostSeenAt = 0; pickedOnce = false; lobbyDirty = true;
   asg = {}; tnSeen = {}; teamLock = false; banned = []; echo = {}; pgT = {}; myPing = 0; lastPg = 0; lastHP = null; migrated = false; becoming = false; paused = false;
 }
 async function connect(code, asHost) {
@@ -1189,15 +1219,18 @@ async function connect(code, asHost) {
   L = r;
   if (!r) { setMsg('Las salas online no están disponibles en esta vista. Abrí la página con tu cuenta, invitado por quien la publicó.'); return; }
   try { room = await r.join('cp-' + code.toLowerCase(), asHost); }
-  catch (e) { room = null; setMsg('No pude entrar a la sala (' + ((e && e.code) || 'error') + ').'); return; }
+  catch (e) {
+    room = null; const c = (e && e.code) || 'error';
+    setMsg(c === 'not_found' ? 'No encontré la sala ' + code + '. Fijate que el código esté bien y que siga abierta.' : c === 'timeout' ? 'No logré conectar con la sala ' + code + '. Probá de nuevo (a veces la primera vez tarda).' : 'No pude entrar a la sala (' + c + ').'); return;
+  }
   roomCode = code; locked = false; attemptN = 0; lastPw = ''; resetNet();
   unPeers = room.onPeers(onPeersChange, () => leaveRoom('Se cortó la conexión con la sala.'));
   if (asHost) {
     mode = 'host'; N = 1; setMap(1); build(1, 1); lim = { mins: cfg.mins, goals: cfg.goals }; isPriv = cfg.priv; pwHash = cfg.priv ? await hashPw(code, cfg.pw) : '';
     pres({ nm: myName, av: avArr(), tm: 'b', h: 1 }); setState('lobby'); setTimeout(() => hostLobbyPublish(true), 150);
   } else {
-    mode = 'client'; joinDeadline = performance.now() + 3500;
-    pres({ nm: myName, av: avArr() }); setState('lobby');
+    mode = 'client'; joinDeadline = performance.now() + 8000;
+    pres({ nm: myName, av: avArr(), tm: 's', tn: ++teamN }); setState('lobby');
   }
 }
 function leaveRoom(msg) {
@@ -1215,17 +1248,12 @@ function applyHost(pr) {
   if (isPriv && !(Array.isArray(pr.ok) && pr.ok.includes(meL))) { showPw(!!(pr.no && attemptN > 0 && pr.no[meL] === attemptN)); return; }
   if (locked) { locked = false; $('pwBox').hidden = true; }
   lastHP = pr;
-  if (pr.ro) ro = pr.ro;
+  if (pr.ro) { ro = pr.ro; if (!Array.isArray(ro.s)) ro.s = []; }
   if (pr.N && pr.N !== N) { N = pr.N; setMap(N); }
   const nb = (ro.b || []).length, nr = (ro.r || []).length;
   if (nb && nr && (teamOf('b').length !== nb || teamOf('r').length !== nr)) build(nb, nr);
   for (const p of P) p.label = (ro[p.team] || [])[p.slot] || '';
   updateMyTeam();
-  if (!pickedOnce && s.ph === 'lobby' && myLabel()) {
-    pickedOnce = true;
-    const nb2 = ro.b.filter(Boolean).length, nr2 = ro.r.filter(Boolean).length;
-    reqTeam(nb2 <= nr2 ? 'b' : 'r');
-  }
   if (Array.isArray(pr.pe)) {
     const e = pr.pe.find(x => x && x[0] === meL);
     if (e && pgT[e[1]]) { const rtt = performance.now() - pgT[e[1]]; delete pgT[e[1]]; myPing = Math.round(myPing ? myPing * .6 + rtt * .4 : rtt); }
@@ -1276,7 +1304,7 @@ function smooth() {
 /* Si se va el anfitrión, el jugador con la etiqueta más baja de los que estaban en equipos toma la sala. */
 function electMe() {
   const here = new Set(peerList().filter(q => q.kind === 'viewer').map(q => q.peer));
-  const c = [...(ro.b || []), ...(ro.r || [])].filter(l => l && here.has(l)).sort();
+  const c = [...(ro.b || []), ...(ro.r || []), ...(ro.s || [])].filter(l => l && here.has(l)).sort();
   return c.length > 0 && c[0] === myLabel();
 }
 async function becomeHost() {
@@ -1286,8 +1314,8 @@ async function becomeHost() {
   if (!room) { becoming = false; return; }
   mode = 'host'; migrated = true; ok = new Set(Array.isArray(pr.ok) ? pr.ok : []); no = {}; att = {};
   banned = Array.isArray(pr.kk) ? pr.kk.slice() : []; teamLock = pr.lk === 1; echo = {}; asg = {}; tnSeen = {};
-  order = [...(ro.b || []), ...(ro.r || [])].filter(Boolean);
-  for (const l of order) { const q = peerByLabel(l); asg[l] = (ro.b || []).includes(l) ? 'b' : 'r'; tnSeen[l] = q ? q.presence.tn : undefined; }
+  order = [...(ro.b || []), ...(ro.r || []), ...(ro.s || [])].filter(Boolean);
+  for (const l of order) { const q = peerByLabel(l); asg[l] = (ro.b || []).includes(l) ? 'b' : ((ro.r || []).includes(l) ? 'r' : 's'); tnSeen[l] = q ? q.presence.tn : undefined; }
   const me = myLabel(); ok.add(me);
   for (const p of P) { const l = p.label; p.owner = l === '' ? 'none' : (l === me ? 'local' : l); }
   if (state === 'goal') { gTimer = 60; finish = sd || score.b >= lim.goals || score.r >= lim.goals; }
@@ -1327,7 +1355,7 @@ function info(p) {
   }
   const qm = q0 && Array.isArray(q0.presence.qm) ? q0.presence.qm : null;
   const t = a && typeof a[0] === 'string' && a[0] ? a[0].slice(0, 2) : p.tag;
-  v = { name: String(name).slice(0, 14), t, tc: (a && AVC[a[1]]) || '#ffffff', rc: (a && AVC[a[2]]) || null, qm };
+  v = { name: String(name).slice(0, 20), t, tc: (a && AVC[a[1]]) || '#ffffff', rc: (a && AVC[a[2]]) || null, qm };
   infoC.set(key, v); return v;
 }
 const pname = p => info(p).name || 'Jugador';
@@ -1480,6 +1508,7 @@ $('join').addEventListener('click', () => {
 });
 $('goB').addEventListener('click', () => { reqTeam('b'); });
 $('goR').addEventListener('click', () => { reqTeam('r'); });
+$('goS').addEventListener('click', () => { reqTeam('s'); });
 $('shuf').addEventListener('click', shuffleTeams);
 $('lockT').addEventListener('click', toggleLock);
 $('leave').addEventListener('click', () => leaveRoom(''));
@@ -1531,38 +1560,70 @@ $('slS').addEventListener('change', saveUi); $('slK').addEventListener('change',
 $('start').addEventListener('click', () => { if (mode === 'host' && (ro.b || []).length && (ro.r || []).length) startOnline(); });
 function lobbyBack() { setState('lobby'); hostLobbyPublish(true); }
 
+let dragging = false;
+function dragSetup(li, l) {
+  li.classList.add('drag');
+  li.addEventListener('pointerdown', e => {
+    if (e.target.closest('button') || e.button > 0) return;
+    const sx = e.clientX, sy = e.clientY, id = e.pointerId; let ghost = null, hot = null;
+    const clearHot = () => { if (hot) hot.classList.remove('dropok'); hot = null; };
+    const colAt = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest ? el.closest('[data-col]') : null; };
+    const mv = ev => {
+      if (ev.pointerId !== id) return;
+      if (!ghost) {
+        if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 8) return;
+        dragging = true; ghost = document.createElement('div'); ghost.className = 'dragghost'; ghost.textContent = li.querySelector('.nm').textContent; document.body.appendChild(ghost); li.classList.add('lift');
+      }
+      ev.preventDefault(); ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+      const c = colAt(ev.clientX, ev.clientY); if (c !== hot) { clearHot(); hot = c; if (hot) hot.classList.add('dropok'); }
+    };
+    const end = ev => {
+      if (ev.pointerId !== id) return;
+      document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end);
+      clearHot();
+      if (ghost) {
+        const c = ev.type === 'pointerup' ? colAt(ev.clientX, ev.clientY) : null; ghost.remove(); ghost = null; dragging = false;
+        if (c) moveP(l, c.dataset.col); else lobbyDirty = true;
+      }
+    };
+    document.addEventListener('pointermove', mv, { passive: false }); document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+  });
+}
 function renderLobby() {
+  if (dragging) { lobbyDirty = true; return; }
   $('roomCode').textContent = roomCode;
   const host = mode === 'host', me = myLabel();
   $('nNet').style.display = host ? '' : 'none'; $('fmtLbl').style.display = host ? '' : 'none';
   $('start').hidden = !host;
   $('lobbyHint').textContent = host ? 'Pasales el código a tus amigos.' : 'Elegí tu equipo y esperá al anfitrión.';
+  $('dragHint').hidden = !host;
   const can = (ro.b || []).length > 0 && (ro.r || []).length > 0;
   $('start').disabled = !can;
   $('lobbyMsg').textContent = host ? (can ? 'Listo para empezar.' : 'Hace falta al menos 1 jugador en cada equipo.') : 'Empieza cuando el anfitrión lo decida.';
   $('cfgInfo').textContent = (lim.mins ? lim.mins + ' min' : 'Sin tiempo') + ' · a ' + lim.goals + ' goles · ' + (isPriv ? 'Privada' : 'Pública');
   markNet();
   $('hostRow').hidden = !host; $('lockT').textContent = teamLock ? 'Desbloquear equipos' : 'Bloquear equipos';
-  $('goB').disabled = $('goR').disabled = teamLock && !host;
-  for (const [id, t] of [['tB', 'b'], ['tR', 'r']]) {
+  $('goB').disabled = $('goR').disabled = $('goS').disabled = teamLock && !host;
+  for (const [id, t] of [['tR', 'r'], ['tS', 's'], ['tB', 'b']]) {
     const ul = $(id); ul.textContent = '';
-    const arr = ro[t] || [];
-    if (!arr.length) { const li = document.createElement('li'); li.className = 'bot'; li.textContent = 'Sin jugadores'; ul.appendChild(li); }
+    const arr = (ro[t] || []).filter(Boolean);
+    if (!arr.length) { const li = document.createElement('li'); li.className = 'bot'; li.textContent = t === 's' ? 'Nadie esperando' : 'Sin jugadores'; ul.appendChild(li); }
     for (const l of arr) {
       const li = document.createElement('li'), nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = nameOf(l) + (l === me ? ' (vos)' : '');
-      if (l === me) li.className = 'me';
+      const q = peerByLabel(l);
+      li.className = (l === me ? 'me ' : '') + (q && q.presence.h === 1 ? 'host' : '');
       li.appendChild(nm);
-      const q = peerByLabel(l), pn = q && q.presence.pn;
+      const pn = q && q.presence.pn;
       if (pn > 0 && l !== me) { const g = document.createElement('span'); g.className = 'pg'; g.textContent = pn + ' ms'; li.appendChild(g); }
       if (host) {
-        const mv = document.createElement('button'); mv.type = 'button'; mv.className = 'mini'; mv.textContent = '⇄'; mv.setAttribute('aria-label', 'Pasar a ' + nameOf(l) + ' al otro equipo'); mv.addEventListener('click', () => moveP(l)); li.appendChild(mv);
         if (l !== me) { const x = document.createElement('button'); x.type = 'button'; x.className = 'mini x'; x.textContent = '✕'; x.setAttribute('aria-label', 'Expulsar a ' + nameOf(l)); x.addEventListener('click', () => expel(l)); li.appendChild(x); }
+        dragSetup(li, l);
       }
       ul.appendChild(li);
     }
   }
-  const inTeam = new Set([...(ro.b || []), ...(ro.r || [])]);
-  const wait = peerList().filter(q => q.kind === 'viewer' && q.presence.nm && !inTeam.has(q.peer));
+  const known = new Set([...(ro.b || []), ...(ro.r || []), ...(ro.s || [])]);
+  const wait = peerList().filter(q => q.kind === 'viewer' && q.presence.nm && !known.has(q.peer));
   $('waitList').textContent = wait.length ? 'Mirando: ' + wait.map(q => q.presence.nm).join(', ') : '';
 }
 
@@ -1586,8 +1647,9 @@ function updateCam() {
   updateScale();
   const hx = aL / 2 / scale, hy = aS / 2 / scale;
   const minX = -GD - 14, maxX = W + GD + 14, minY = -14, maxY = H + 14;
-  const tx = maxX - minX <= 2 * hx ? W / 2 : Math.max(minX + hx, Math.min(maxX - hx, ball.x));
-  const ty = maxY - minY <= 2 * hy ? H / 2 : Math.max(minY + hy, Math.min(maxY - hy, ball.y));
+  const fo = P.find(p => p.owner === 'local') || myDisc() || ball;
+  const tx = maxX - minX <= 2 * hx ? W / 2 : Math.max(minX + hx, Math.min(maxX - hx, fo.x));
+  const ty = maxY - minY <= 2 * hy ? H / 2 : Math.max(minY + hy, Math.min(maxY - hy, fo.y));
   if (camSnap) { cam.x = tx; cam.y = ty; camSnap = false; } else { cam.x += (tx - cam.x) * .14; cam.y += (ty - cam.y) * .14; }
 }
 new ResizeObserver(() => { resize(); defaultStick(); }).observe(stage);
@@ -1685,7 +1747,7 @@ function drawAvPrev() {
 function openName() { $('nameIn').value = myName; $('avIn').value = myAv.t; tmpAv = { tc: myAv.tc, rc: myAv.rc }; drawAvPrev(); $('nameBox').hidden = false; setTimeout(() => $('nameIn').focus(), 50); }
 $('nameForm').addEventListener('submit', e => {
   e.preventDefault();
-  const v = $('nameIn').value.replace(/\s+/g, ' ').trim().slice(0, 14);
+  const v = $('nameIn').value.replace(/\s+/g, ' ').trim().slice(0, 20);
   if (!v) return;
   myName = v; try { localStorage.setItem('chapitas-name', v); } catch (x) {}
   myAv.t = $('avIn').value.trim().slice(0, 2); myAv.tc = tmpAv.tc; myAv.rc = tmpAv.rc; infoC = new Map();
@@ -1715,7 +1777,7 @@ function pollChat() {
       if (!Array.isArray(m) || typeof m[0] !== 'string' || typeof m[1] !== 'string') continue;
       const key = q.peer + m[0]; if (chatSeen.has(key)) continue;
       chatSeen.add(key);
-      addChat(String(q.presence.nm || 'Jugador').slice(0, 14), m[1].slice(0, 120), q.isMe);
+      addChat(String(q.presence.nm || 'Jugador').slice(0, 20), m[1].slice(0, 120), q.isMe);
     }
   }
 }
@@ -1743,7 +1805,7 @@ function renderPub() {
     if (q.isMe || q.kind !== 'viewer' || !r || typeof r.c !== 'string' || !/^[A-Z0-9]{4}$/.test(r.c)) continue;
     const e = q.presence.le;
     if (me && Array.isArray(e)) { const x = e.find(z => z && z[0] === me); if (x && lgSeen[q.peer] !== x[1] && lgT[x[1]]) { lgSeen[q.peer] = x[1]; lgPing[q.peer] = Math.round(now - lgT[x[1]]); } }
-    pubRows.push({ c: r.c, n: String(r.n || 'Jugador').slice(0, 14), f: Math.max(1, Math.min(3, +r.f || 1)), k: +r.k || 0, p: r.p === 1, ms: Math.round((lgPing[q.peer] || 0) / 10) * 10 });
+    pubRows.push({ c: r.c, n: String(r.n || 'Jugador').slice(0, 20), f: Math.max(1, Math.min(3, +r.f || 1)), k: +r.k || 0, p: r.p === 1, ms: Math.round((lgPing[q.peer] || 0) / 10) * 10 });
   }
   drawPub();
   /* Si soy anfitrión en la sala de espera, respondo los pings de la lista. */
@@ -1782,6 +1844,9 @@ layoutUI(); resize(); setState('menu');
 if (!myName) openName();
 requestAnimationFrame(frame);
 })();
+
+/* sin zoom por pellizco (iOS) */
+['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 
 </script>
 <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
