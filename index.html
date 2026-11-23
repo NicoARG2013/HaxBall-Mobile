@@ -305,7 +305,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
           <div id="pubList" class="publist"></div>
         </div>
       </div>
-      <p id="msg"></p><p class="sub" style="font-size:11px;margin:2px 0 0;opacity:.6">Versión 6 · f94b</p>
+      <p id="msg"></p><p class="sub" style="font-size:11px;margin:2px 0 0;opacity:.6">Versión 7 · 9fb8</p>
     </div>
   </div>
 
@@ -436,9 +436,21 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
 (() => {
   'use strict';
   const SB = { url: 'https://dpuiipjvfvjggfeumtle.supabase.co', key: 'sb_publishable_EgZG7NDlmORPSbbiMWQ2ig_oOM1QXYB' };
-  let ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' },
-    { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
-    { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }], iceCandidatePoolSize: 4 };
+  let ICE = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' }
+    ], iceCandidatePoolSize: 2
+  };
+  /* Servidor TURN público de Open Relay (Metered), con credenciales que se calculan al momento (válidas 1 día). */
+  async function openRelay() {
+    const secret = 'openrelayprojectsecret', user = String(Math.floor(Date.now() / 1000) + 86400), enc = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+    const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(user)));
+    let b = ''; for (const x of sig) b += String.fromCharCode(x);
+    const h = 'staticauth.openrelay.metered.ca';
+    return { urls: ['turn:' + h + ':80', 'turn:' + h + ':80?transport=tcp', 'turn:' + h + ':443', 'turns:' + h + ':443?transport=tcp'], username: user, credential: btoa(b) };
+  }
   const rnd = n => { const a = crypto.getRandomValues(new Uint8Array(n)); let s = ''; for (const b of a) s += 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]; return s; };
   const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
   /* Parche tipo "merge": null borra, objetos se mezclan, el resto reemplaza. */
@@ -451,7 +463,9 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
   const ICE_URL = '';
   let iceLoaded = false;
   async function loadIce() {
-    if (iceLoaded || !ICE_URL) { iceLoaded = true; return; } iceLoaded = true;
+    if (iceLoaded) return; iceLoaded = true;
+    try { ICE = { ...ICE, iceServers: [...ICE.iceServers, await openRelay()] }; } catch (e) {}
+    if (!ICE_URL) return;
     try {
       const c = new AbortController(); const t = setTimeout(() => c.abort(), 4000);
       const r = await fetch(ICE_URL, { signal: c.signal }); clearTimeout(t);
@@ -525,7 +539,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
       if (!pc) { if ((n || 0) < 30) setTimeout(() => this.hook(conn, (n || 0) + 1), 100); return; }
       const d = this.dg;
       pc.addEventListener('icecandidate', ev => { const m = ev.candidate && / typ (\w+)/.exec(ev.candidate.candidate || ''); if (m) { if (m[1] === 'relay') d.r++; else if (m[1] === 'srflx') d.s++; else d.h++; } });
-      pc.addEventListener('icecandidateerror', ev => { if (!d.err) d.err = (ev.errorCode || '?') + ''; });
+      pc.addEventListener('icecandidateerror', ev => { if (d.err.length < 40 && !d.err.includes(ev.url || '?')) d.err += (d.err ? ' ' : '') + (ev.errorCode || '?') + '@' + String(ev.url || '?').replace(/^turns?:/, '').split('?')[0]; });
       pc.addEventListener('iceconnectionstatechange', () => { d.ice = pc.iceConnectionState; });
     }
     diag() { const d = this.dg; return 'srv=' + d.open + ' ice=' + d.ice + ' cand=' + d.h + '/' + d.s + '/' + d.r + (d.err ? ' err=' + d.err : '') + (this.unavail ? ' nohost' : ''); }
