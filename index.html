@@ -4,7 +4,7 @@
 <meta name="theme-color" content="#26302a">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="HaxBall Mobile">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>HaxBall Mobile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -305,7 +305,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
           <div id="pubList" class="publist"></div>
         </div>
       </div>
-      <p id="msg"></p>
+      <p id="msg"></p><p class="sub" style="font-size:11px;margin:2px 0 0;opacity:.6">Versión 6 · f94b</p>
     </div>
   </div>
 
@@ -436,7 +436,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
 (() => {
   'use strict';
   const SB = { url: 'https://dpuiipjvfvjggfeumtle.supabase.co', key: 'sb_publishable_EgZG7NDlmORPSbbiMWQ2ig_oOM1QXYB' };
-  const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' },
+  let ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' },
     { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
     { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }], iceCandidatePoolSize: 4 };
   const rnd = n => { const a = crypto.getRandomValues(new Uint8Array(n)); let s = ''; for (const b of a) s += 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]; return s; };
@@ -447,6 +447,17 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
     for (const k of Object.keys(p)) { const v = p[k]; if (v === null) delete o[k]; else if (isObj(v) && isObj(o[k])) o[k] = merge(o[k], v); else o[k] = v; }
     return o;
   }
+  /* Si algún día hay un servidor TURN propio, se pone acá la dirección que devuelve una lista de iceServers (JSON). */
+  const ICE_URL = '';
+  let iceLoaded = false;
+  async function loadIce() {
+    if (iceLoaded || !ICE_URL) { iceLoaded = true; return; } iceLoaded = true;
+    try {
+      const c = new AbortController(); const t = setTimeout(() => c.abort(), 4000);
+      const r = await fetch(ICE_URL, { signal: c.signal }); clearTimeout(t);
+      const j = await r.json(); if (Array.isArray(j) && j.length) ICE = { ...ICE, iceServers: [...j, ...ICE.iceServers] };
+    } catch (e) {}
+  }
   const mkPeer = (id) => new (window.Peer)(id, { config: ICE, debug: 0 });
 
   class Room {
@@ -454,13 +465,14 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
       this.code = code; this.entryId = 'chapitas-' + code.toLowerCase(); this.mk = PeerCtor || mkPeer;
       this.subs = new Set(); this.errs = new Set(); this.pr = {}; this.others = new Map(); this.pending = new Set();
       this.peer = null; this.entry = null; this.claiming = false; this.closed = false; this.label = ''; this.q = false;
-      this.meObj = null; this.tick = null; this.lastClaim = 0; this.unavail = false;
+      this.meObj = null; this.tick = null; this.lastClaim = 0; this.unavail = false; this.dg = { ice: '-', h: 0, s: 0, r: 0, err: '', open: 0 };
     }
     async start(asHost) {
+      await loadIce();
       this.label = 'u' + rnd(8);
       await new Promise((res, rej) => {
         let done = false; const p = this.mk(this.label); this.peer = p;
-        p.on('open', () => { done = true; res(); });
+        p.on('open', () => { done = true; this.dg.open = 1; res(); });
         p.on('connection', c => { c.__in = true; this.adopt(c); });
         p.on('disconnected', () => { if (!this.closed) { try { p.reconnect(); } catch (e) {} } });
         p.on('error', e => {
@@ -468,7 +480,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
           if (e && e.type === 'peer-unavailable' && String((e && e.message) || '').includes(this.entryId)) { this.unavail = true; return; }
           if (e && ['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type) && !this.closed) this.fail();
         });
-        setTimeout(() => { if (!done) { done = true; rej({ code: 'timeout' }); } }, 10000);
+        setTimeout(() => { if (!done) { done = true; rej({ code: 'timeout', diag: 'srv=0 sin conexion al servidor de PeerJS' }); } }, 10000);
       });
       if (asHost) { try { await this.claimEntry(true); } catch (e) { this.leave(); throw e; } }
       this.tick = setInterval(() => this.heartbeat(), 1000);
@@ -482,7 +494,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
               if (this.closed) { clearInterval(iv); rej({ code: 'closed' }); }
               else if (this.others.size > 0) { clearInterval(iv); res(); }
               else if (this.unavail && dt > 7000) { clearInterval(iv); rej({ code: 'not_found' }); }
-              else if (dt > 18000) { clearInterval(iv); rej({ code: 'timeout' }); }
+              else if (dt > 18000) { clearInterval(iv); rej({ code: 'timeout', diag: this.diag() }); }
               else if (dt > n * 5000) { n++; this.unavail = false; this.pending.delete(this.entryId); this.dial(this.entryId, true); }
             }, 250);
           });
@@ -508,7 +520,17 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
       let c; try { c = this.peer.connect(id, { reliable: true, serialization: 'json' }); } catch (e) { return; }
       this.adopt(c);
     }
+    hook(conn, n) {
+      const pc = conn.peerConnection;
+      if (!pc) { if ((n || 0) < 30) setTimeout(() => this.hook(conn, (n || 0) + 1), 100); return; }
+      const d = this.dg;
+      pc.addEventListener('icecandidate', ev => { const m = ev.candidate && / typ (\w+)/.exec(ev.candidate.candidate || ''); if (m) { if (m[1] === 'relay') d.r++; else if (m[1] === 'srflx') d.s++; else d.h++; } });
+      pc.addEventListener('icecandidateerror', ev => { if (!d.err) d.err = (ev.errorCode || '?') + ''; });
+      pc.addEventListener('iceconnectionstatechange', () => { d.ice = pc.iceConnectionState; });
+    }
+    diag() { const d = this.dg; return 'srv=' + d.open + ' ice=' + d.ice + ' cand=' + d.h + '/' + d.s + '/' + d.r + (d.err ? ' err=' + d.err : '') + (this.unavail ? ' nohost' : ''); }
     adopt(conn) {
+      this.hook(conn);
       const hi = () => { try { conn.send({ t: 'hi', id: this.label, p: this.pr, l: [...this.others.keys()] }); } catch (e) {} };
       if (conn.open) hi(); else conn.on('open', hi);
       conn.on('data', d => { try { this.onData(conn, d); } catch (e) {} });
@@ -1221,7 +1243,7 @@ async function connect(code, asHost) {
   try { room = await r.join('cp-' + code.toLowerCase(), asHost); }
   catch (e) {
     room = null; const c = (e && e.code) || 'error';
-    setMsg(c === 'not_found' ? 'No encontré la sala ' + code + '. Fijate que el código esté bien y que siga abierta.' : c === 'timeout' ? 'No logré conectar con la sala ' + code + '. Probá de nuevo (a veces la primera vez tarda).' : 'No pude entrar a la sala (' + c + ').'); return;
+    setMsg(c === 'not_found' ? 'No encontré la sala ' + code + '. Fijate que el código esté bien y que siga abierta.' : c === 'timeout' ? 'No logré conectar con la sala ' + code + '. Probá de nuevo. [' + ((e && e.diag) || 'sin datos') + ']' : 'No pude entrar a la sala (' + c + ').'); return;
   }
   roomCode = code; locked = false; attemptN = 0; lastPw = ''; resetNet();
   unPeers = room.onPeers(onPeersChange, () => leaveRoom('Se cortó la conexión con la sala.'));
@@ -1849,5 +1871,5 @@ requestAnimationFrame(frame);
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 
 </script>
-<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+<script>if('serviceWorker' in navigator){const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)location.reload()});addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{}))}</script>
 </body></html>
