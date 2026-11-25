@@ -227,8 +227,11 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
 .pub span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
 .pub button { flex: none; padding: 6px 12px; border: 0; border-radius: 999px; cursor: pointer; background: var(--accent); color: var(--outline); font-weight: 800; font-size: 12px; }
 .panel.wider { width: min(100%, 860px); }
-.menuhead { display: flex; align-items: center; justify-content: center; gap: 6px 18px; flex-wrap: wrap; }
-.menuhead .namechip { margin: 0; }
+.menuhead { display: flex; align-items: center; justify-content: center; gap: 6px 12px; flex-wrap: nowrap; }
+.menuhead .namechip { margin: 0; flex: none; white-space: nowrap; padding: 4px 5px 4px 11px; font-size: 12px; }
+.menuhead .namechip b { padding: 3px 8px; font-size: 11px; }
+.menuhead h1 { font-size: 22px; white-space: nowrap; flex: none; gap: 8px; }
+@media (max-width: 700px) { .menuhead { flex-wrap: wrap; } }
 .cols3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; }
 @media (max-width: 640px) { .cols3 { grid-template-columns: 1fr; } }
 .cols3 .publist { max-height: 170px; margin-top: 4px; }
@@ -305,7 +308,7 @@ h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2
           <div id="pubList" class="publist"></div>
         </div>
       </div>
-      <p id="msg"></p><p class="sub" style="font-size:11px;margin:2px 0 0;opacity:.6">Versión 10 · c1fd</p>
+      <p id="msg"></p><p class="sub" style="font-size:11px;margin:2px 0 0;opacity:.6">Versión 11 · c42e</p>
     </div>
   </div>
 
@@ -939,7 +942,7 @@ function koClamp(p) {
 function touch(p) { if (hist[0] !== p) { hist.unshift(p); if (hist.length > 3) hist.pop(); } }
 function tryKick(p) {
   const dx = ball.x - p.x, dy = ball.y - p.y, d = Math.hypot(dx, dy) || 1;
-  if (d - p.r - ball.r < 4.5) {
+  if (d - p.r - ball.r < (p.owner === 'local' || p.owner === 'bot' ? 4.5 : 9)) {
     ball.vx += dx / d * 5; ball.vy += dy / d * 5; p.arm = 0; touch(p);
     beep(p.owner === 'local' ? 280 : 210, .07);
     if (p.owner === 'local') vib(10);
@@ -963,6 +966,7 @@ function step() {
     p.vx += i.ix * acc; p.vy += i.iy * acc;
     if (i.kick && !p.latch) p.arm = 8;
     p.latch = i.kick;
+    if (i.ks !== undefined) { if (p.ks === undefined) p.ks = i.ks; else if (i.ks !== p.ks) { p.ks = i.ks; p.arm = 14; } }
     if (p.arm > 0) { p.arm--; tryKick(p); }
     p.x += p.vx; p.y += p.vy; p.vx *= p.damp; p.vy *= p.damp;
   }
@@ -987,7 +991,7 @@ function step() {
     if (lim.mins && !sd && frames >= lim.mins * 3600) {
       if (score.b !== score.r) setState('over'); else { sd = true; updateClock(); toast('¡Gol de oro! El próximo gol gana'); }
     }
-    if (state === 'play') { if (ball.x > W) goal('b'); else if (ball.x < 0) goal('r'); }
+    if (state === 'play') { if (ball.x - ball.r > W) goal('b'); else if (ball.x + ball.r < 0) goal('r'); }
   } else if (state === 'goal' && --gTimer <= 0) {
     if (finish) setState('over');
     else { kickoff(); setState('play'); }
@@ -1135,7 +1139,7 @@ function remoteInput(p) {
   if (!Array.isArray(i)) return ZIN;
   let x = +i[0] || 0, y = +i[1] || 0; const l = Math.hypot(x, y);
   if (l > 0) { x /= l; y /= l; }
-  return { ix: x, iy: y, mag: Math.max(0, Math.min(1, +i[2] || 0)), kick: !!i[3] };
+  return { ix: x, iy: y, mag: Math.max(0, Math.min(1, +i[2] || 0)), kick: !!i[3], ks: i.length > 4 ? (+i[4] | 0) : undefined };
 }
 const isAuth = l => !isPriv || ok.has(l) || l === myLabel();
 function computeRoster() {
@@ -1304,7 +1308,7 @@ function applyHost(pr) {
   if (score.b + score.r > prev) beep(659, .2, 'triangle', .07);
   setPauseUI(); updateClock(); updateHud();
 }
-let bLoc = 0, pArm = 0, pLatch = false;
+let bLoc = 0, pArm = 0, pLatch = false, kSeq = 0, prevK = false;
 function setEnt(e, x, y, vx, vy, k) {
   if (e === ball && bLoc > 0) return;
   e.tx = x; e.ty = y; e.vx = vx; e.vy = vy; e.in = k ? { ix: 0, iy: 0, mag: 0, kick: true } : ZIN;
@@ -1338,7 +1342,7 @@ function predictBall(p, i) {
   if (bLoc <= 0) return;
   ball.x += ball.vx; ball.y += ball.vy; ball.vx *= ball.damp; ball.vy *= ball.damp;
   collide(p, ball, DRIB);
-  if (i.kick && !pLatch) pArm = 8; pLatch = !!i.kick;
+  if (i.kick && !pLatch) pArm = 10; pLatch = !!i.kick;
   if (pArm > 0) {
     pArm--;
     const dx = ball.x - p.x, dy = ball.y - p.y, d = Math.hypot(dx, dy) || 1;
@@ -1387,8 +1391,9 @@ function clientTick(t) {
   }
   if (t - lastPg > 2500) { lastPg = t; pgN++; pgT[pgN] = t; delete pgT[pgN - 6]; pres({ pg: pgN, pn: myPing }); }
   if (state === 'play' || state === 'goal') {
-    const li = localInput(), arr = [R2(li.ix), R2(li.iy), R2(li.mag), li.kick ? 1 : 0], j = arr.join(',');
-    if ((j !== lastSent && t - lastSentAt >= 33) || t - lastSentAt > 400) { lastSent = j; lastSentAt = t; pres({ i: arr }); }
+    const li = localInput(), kEdge = li.kick && !prevK; prevK = li.kick; if (kEdge) kSeq = (kSeq + 1) & 255;
+    const arr = [R2(li.ix), R2(li.iy), R2(li.mag), li.kick ? 1 : 0, kSeq], j = arr.join(',');
+    if ((j !== lastSent && (t - lastSentAt >= 33 || kEdge)) || t - lastSentAt > 400) { lastSent = j; lastSentAt = t; pres({ i: arr }); }
   }
 }
 
